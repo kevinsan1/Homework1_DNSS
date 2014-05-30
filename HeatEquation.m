@@ -1,8 +1,10 @@
-%% Heat_equation 
-%- Program to solve the diffusion equation
+%% Heat_equation
+% Program to solve the diffusion equation
 % using the Backward Euler method
 %% Parameters
 clear all;close all;clc;
+savePath = ['/Users/kevin/SkyDrive/KTH Work/' ...
+    'Period 3 2014/DN2255/Homework/1/Heat Equation/Figures'];
 N = 50; % Number of grid points
 L = 1; % The system extends from (x)=(0) to (x)=(L)
 h = L/N;
@@ -22,10 +24,10 @@ yExponent = (y-ys).^2;
 S = exp(-(xExponent)/w^2).*exp(-yExponent/w^2);
 deltaFunction = zeros(N);
 deltaFunction(round(N/2),round(N/2))=2;
-% S = deltaFunction;
+S = deltaFunction;
 S = reshape(S,[N^2,1]);
 %% Initialize Q-matrix
-Q = zeros(N^2,1); 
+Q = zeros(N^2,1);
 %% Compute matrix A
 TN = 2*eye(N) - diag(ones(N-1,1),1) - diag(ones(N-1,1),-1);
 % Boundary conditions
@@ -53,9 +55,33 @@ Qresh = reshape(Qplot,[N,N,tsteps]);
 cons(1:tsteps,1) = h^2*sum(sum(Qresh(:,:,1:end)));
 figure(1);
 plot(tau*(1:length(cons)),cons);
-tL=title('\Deltax \Deltay Q_{i,j} vs time');
-xL = xlabel('time (sec)');
-yL = ylabel('\Deltax \Deltay Q_{i,j}');
+axis([0 tau*length(cons) min(cons) 1.2*max(cons)])
+% hTitle, hXLabel, hYLabel
+hTitle = title('Conservation of Q_{i,j} over time');
+hXLabel = xlabel('time (sec)');
+hYLabel = ylabel('\Deltax \Deltay Q_{i,j}');
+% Configuration
+set( gca                       , ...
+    'FontName'   , 'Helvetica' );
+set([hTitle, hXLabel, hYLabel], ...
+    'FontName'   , 'AvantGarde');
+set( gca             , ...
+    'FontSize'   , 8           );
+set([hXLabel, hYLabel]  , ...
+    'FontSize'   , 10          );
+set( hTitle                    , ...
+    'FontSize'   , 12          , ...
+    'FontWeight' , 'bold'      );
+set(gca, ...
+    'Box'         , 'off'         , ...
+    'TickDir'     , 'out'         , ...
+    'TickLength'  , [.02 .02]     , ...
+    'XMinorTick'  , 'on'          , ...
+    'YMinorTick'  , 'on'          , ...
+    'XColor'      , [.3 .3 .3]    , ...
+    'YColor'      , [.3 .3 .3]    , ...
+    'ZColor'      , [.3 .3 .3]    , ...
+    'LineWidth'   , 1             );
 %% Print Plots
 fin = length(Qplot(1,:));
 maxZ = max(max(max(Qresh)));
@@ -67,9 +93,51 @@ figure(2)
 for i = 1:length(n1)
     s1=subplot(3,2,i);
     mesh(x,y,Qresh(:,:,n1(i)))
-    hTitle = title(sprintf('t = %0.4f',time(n1(i))));
     axis([0 1 0 1 0 maxZ]);
+	% hTitle, hXLabel, hYLabel, hZLabel
+	hTitle = title(sprintf('t = %0.4f',time(n1(i))));
     hXLabel = xlabel('x');
     hYLabel = ylabel('y');
     hZLabel = zlabel('Q');
+	% Configuration
+    set( gca                       , ...
+        'FontName'   , 'Helvetica' );
+    set([hTitle, hXLabel, hYLabel, hZLabel], ...
+        'FontName'   , 'AvantGarde');
+    set( gca             , ...
+        'FontSize'   , 8           );
+    set([hXLabel, hYLabel, hZLabel]  , ...
+        'FontSize'   , 10          );
+    set( hTitle                    , ...
+        'FontSize'   , 12          , ...
+        'FontWeight' , 'bold'      );
+    set(gca, ...
+        'Box'         , 'off'         , ...
+        'TickDir'     , 'out'         , ...
+        'TickLength'  , [.02 .02]     , ...
+        'XMinorTick'  , 'on'          , ...
+        'YMinorTick'  , 'on'          , ...
+        'XColor'      , [.3 .3 .3]    , ...
+        'YColor'      , [.3 .3 .3]    , ...
+        'LineWidth'   , 1             );
+end
+%% Save Figure
+saveFigurePath = ['/Users/kevin/SkyDrive/KTH Work' ...
+    '/Period 3 2014/DN2255/Homework/1/Heat Equation/Figures/'];
+addpath(saveFigurePath);
+printYesNo = 0;
+if printYesNo == 1
+    set(figure(1), 'PaperPositionMode', 'auto');
+    print('-depsc2', [saveFigurePath ...
+        sprintf('deltaConservationPlot')]);
+end
+%% Save Figure 2
+saveFigurePath = ['/Users/kevin/SkyDrive/KTH Work' ...
+    '/Period 3 2014/DN2255/Homework/1/Heat Equation/Figures/'];
+addpath(saveFigurePath);
+printYesNo = 0;
+if printYesNo == 1
+    set(figure(2), 'PaperPositionMode', 'auto');
+    print('-depsc2', [saveFigurePath ...
+        sprintf('deltaFunctionPlot')]);
 end
