@@ -28,6 +28,9 @@ S = reshape(S,[N^2,1]);
 Q = zeros(N^2,1); 
 %% Compute matrix A
 TN = 2*eye(N) - diag(ones(N-1,1),1) - diag(ones(N-1,1),-1);
+% Boundary conditions
+TN(1,1)=1;
+TN(end,end)=1;
 TNxN = kron(eye(N),TN) + kron(TN,eye(N));
 mA = eye(N^2) + coeff*TNxN;
 sparseA = sparse(mA);
@@ -36,7 +39,7 @@ Qplot(:,1) = Q; % initial value
 stepNumber=round(.25/tau);
 %% Main loops
 for iter=1:stepNumber
-    Q = sparseA\Q + S;
+    Q = sparseA\Q + tau*S;
     Qplot(:,iter+1) = Q(:);
 end
 % Loop after source is gone
@@ -60,6 +63,7 @@ maxZ = max(max(max(Qresh)));
 %        ceil(.25/tau)+5 ceil(.25/tau)+20 ceil(.25/tau)+50];
 n1 = [1 floor(fin*6/24) floor(fin*12/24)...
     floor(fin*13/24) floor(fin*14/24) floor(fin*15/24)];
+figure(2)
 for i = 1:length(n1)
     s1=subplot(3,2,i);
     mesh(x,y,Qresh(:,:,n1(i)))
