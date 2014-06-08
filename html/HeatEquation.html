@@ -1,0 +1,458 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Heat_equation</title><meta name="generator" content="MATLAB 8.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-06-07"><meta name="DC.source" content="HeatEquation.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Heat_equation</h1><!--introduction--><p>Program to solve the diffusion equation using the Backward Euler method</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Parameters</a></li><li><a href="#2">Initialize Source function</a></li><li><a href="#3">Compute matrix A</a></li><li><a href="#4">Initialize loop and plot variables</a></li><li><a href="#5">Main loops</a></li><li><a href="#6">Reshape Q for plotting</a></li><li><a href="#7">look at dx*dy*Qij for Conservation</a></li><li><a href="#8">Plot</a></li><li><a href="#9">Print Plots</a></li><li><a href="#10">Save Figure</a></li><li><a href="#11">Save Figure 2</a></li></ul></div><h2>Parameters<a name="1"></a></h2><pre class="codeinput">clear <span class="string">all</span>;close <span class="string">all</span>;clc;
+savePath = [<span class="string">'/Users/kevin/SkyDrive/KTH Work/'</span> <span class="keyword">...</span>
+    <span class="string">'Period 3 2014/DN2255/Homework/1/Heat Equation/Figures'</span>];
+N = 50; <span class="comment">% Number of grid points</span>
+L = 1; <span class="comment">% The system extends from (x)=(0) to (x)=(L)</span>
+h = L/N;
+i = 1:(N); <span class="comment">% 1:N</span>
+[x,y] = meshgrid(h/2:h:L,h/2:h:L);
+w = 0.2;
+xs = 0.5;
+ys = 0.5;
+tfinal = .5;
+tau = .1*h;
+coeff = tau/h^2;
+tsteps = ceil(tfinal/tau);
+time = linspace(0,tfinal,tsteps);
+</pre><h2>Initialize Source function<a name="2"></a></h2><pre class="codeinput">xExponent = (x-xs).^2;
+yExponent = (y-ys).^2;
+S = exp(-(xExponent)/w^2).*exp(-yExponent/w^2);
+deltaFunction = zeros(N);
+deltaFunction(round(N/2),round(N/2))=2;
+<span class="comment">% S = deltaFunction;</span>
+S = reshape(S,[N^2,1]);
+</pre><h2>Compute matrix A<a name="3"></a></h2><p>Boundary conditions</p><pre class="codeinput">xgrid = h/2:h:L;
+qy1 = 1/(3*pi) * sin(3*pi*xgrid);
+qy0 = 1/pi * sin(pi*xgrid);
+qy = qy1 -qy0;
+TN = - diag(ones(N-1,1),-1) + 2*eye(N) - diag(ones(N-1,1),1);
+TNy = TN;
+<span class="comment">% Periodic</span>
+TN(1,end) = -1;
+TN(end,1) = -1;
+<span class="comment">% No Flux</span>
+<span class="comment">% TN(1,1) = 1;</span>
+<span class="comment">% TN(end,end) = 1;</span>
+
+TNxN = kron(TN,eye(N)) + kron(eye(N),TNy);
+mA = eye(N^2) + coeff*TNxN;
+sparseA = sparse(mA);
+</pre><h2>Initialize loop and plot variables<a name="4"></a></h2><pre class="codeinput">Q = zeros(N);
+Q(1,:) = coeff*qy0; <span class="comment">% Q(y,x)</span>
+Q(2,:) = coeff*qy1; <span class="comment">% Q(y,x)</span>
+Q = reshape(Q,[N^2,1]);
+Qplot(:,1) = Q; <span class="comment">% initial value</span>
+neg1BC = ones(N);
+neg1BC(1,1) = 1;
+neg1BC(end,end) = 1;
+neg1BC = coeff*kron(neg1BC,eye(N));
+sneg1BC = sparse(neg1BC);
+stepNumber=round(.25/tau);
+</pre><h2>Main loops<a name="5"></a></h2><pre class="codeinput"><span class="keyword">for</span> iter=1:stepNumber
+    Q = (sparseA)\Q + tau*S;
+    Q = reshape(Q,[N,N]);
+    Q(1,:) = coeff*qy0; <span class="comment">% Q(y,x)</span>
+    Q(2,:) = coeff*qy1; <span class="comment">% Q(y,x)</span>
+    Q = reshape(Q,[N^2,1]);
+    Qplot(:,iter+1) = Q(:);
+<span class="keyword">end</span>
+<span class="comment">% Loop after source is gone</span>
+<span class="keyword">for</span> iter2=(iter+2):tsteps
+    Q = (sparseA)\Q;
+    Q = reshape(Q,[N,N]);
+    Q(1,:) = coeff*qy0; <span class="comment">% Q(y,x)</span>
+    Q(2,:) = coeff*qy1; <span class="comment">% Q(y,x)</span>
+    Q = reshape(Q,[N^2,1]);
+    Qplot(:,iter2) = Q(:);
+<span class="keyword">end</span>
+</pre><h2>Reshape Q for plotting<a name="6"></a></h2><pre class="codeinput">Qresh = reshape(Qplot,[N,N,tsteps]);
+</pre><h2>look at dx*dy*Qij for Conservation<a name="7"></a></h2><pre class="codeinput">cons(1:tsteps,1) = h^2*sum(sum(Qresh(:,:,1:end)));
+figure(1);
+plot(tau*(1:length(cons)),cons);
+axis([0 tau*length(cons) min(cons) 1.2*max(cons)])
+<span class="comment">% hTitle, hXLabel, hYLabel</span>
+hTitle = title(<span class="string">'Conservation of Q_{i,j} over time'</span>);
+hXLabel = xlabel(<span class="string">'time (sec)'</span>);
+hYLabel = ylabel(<span class="string">'\Deltax \Deltay Q_{i,j}'</span>);
+<span class="comment">% Configuration</span>
+set( gca                       , <span class="keyword">...</span>
+    <span class="string">'FontName'</span>   , <span class="string">'Helvetica'</span> );
+set([hTitle, hXLabel, hYLabel], <span class="keyword">...</span>
+    <span class="string">'FontName'</span>   , <span class="string">'AvantGarde'</span>);
+set( gca             , <span class="keyword">...</span>
+    <span class="string">'FontSize'</span>   , 8           );
+set([hXLabel, hYLabel]  , <span class="keyword">...</span>
+    <span class="string">'FontSize'</span>   , 10          );
+set( hTitle                    , <span class="keyword">...</span>
+    <span class="string">'FontSize'</span>   , 12          , <span class="keyword">...</span>
+    <span class="string">'FontWeight'</span> , <span class="string">'bold'</span>      );
+set(gca, <span class="keyword">...</span>
+    <span class="string">'Box'</span>         , <span class="string">'off'</span>         , <span class="keyword">...</span>
+    <span class="string">'TickDir'</span>     , <span class="string">'out'</span>         , <span class="keyword">...</span>
+    <span class="string">'TickLength'</span>  , [.02 .02]     , <span class="keyword">...</span>
+    <span class="string">'XMinorTick'</span>  , <span class="string">'on'</span>          , <span class="keyword">...</span>
+    <span class="string">'YMinorTick'</span>  , <span class="string">'on'</span>          , <span class="keyword">...</span>
+    <span class="string">'XColor'</span>      , [.3 .3 .3]    , <span class="keyword">...</span>
+    <span class="string">'YColor'</span>      , [.3 .3 .3]    , <span class="keyword">...</span>
+    <span class="string">'ZColor'</span>      , [.3 .3 .3]    , <span class="keyword">...</span>
+    <span class="string">'LineWidth'</span>   , 1             );
+</pre><h2>Plot<a name="8"></a></h2><pre class="codeinput">fin = length(Qplot(1,:));
+maxZ = max(max(max(Qresh)));
+figure1=figure(3);
+<span class="keyword">for</span> i = 1:fin
+    mesh(x,y,Qresh(:,:,i))
+    hTitle = title(sprintf(<span class="string">'Source Turned off at t=%0.2f\nt=%0.4f'</span>,(iter+1)*tau,tau*i));
+    hXLabel = xlabel(<span class="string">'x'</span>);
+    hYLabel = ylabel(<span class="string">'y'</span>);
+    hZLabel = zlabel(<span class="string">'z'</span>);
+    set( gca                       , <span class="keyword">...</span>
+        <span class="string">'FontName'</span>   , <span class="string">'Helvetica'</span> );
+    set([hTitle, hXLabel, hYLabel, hZLabel], <span class="keyword">...</span>
+        <span class="string">'FontName'</span>   , <span class="string">'AvantGarde'</span>);
+    set( gca             , <span class="keyword">...</span>
+        <span class="string">'FontSize'</span>   , 8           );
+    set([hXLabel, hYLabel, hZLabel]  , <span class="keyword">...</span>
+        <span class="string">'FontSize'</span>   , 10          );
+    set( hTitle                    , <span class="keyword">...</span>
+        <span class="string">'FontSize'</span>   , 12          , <span class="keyword">...</span>
+        <span class="string">'FontWeight'</span> , <span class="string">'bold'</span>      );
+    set(gca, <span class="keyword">...</span>
+        <span class="string">'Box'</span>         , <span class="string">'off'</span>         , <span class="keyword">...</span>
+        <span class="string">'TickDir'</span>     , <span class="string">'out'</span>         , <span class="keyword">...</span>
+        <span class="string">'TickLength'</span>  , [.02 .02]     , <span class="keyword">...</span>
+        <span class="string">'XMinorTick'</span>  , <span class="string">'on'</span>          , <span class="keyword">...</span>
+        <span class="string">'YMinorTick'</span>  , <span class="string">'on'</span>          , <span class="keyword">...</span>
+        <span class="string">'ZMinorTick'</span>  , <span class="string">'on'</span>          , <span class="keyword">...</span>
+        <span class="string">'XColor'</span>      , [.3 .3 .3]    , <span class="keyword">...</span>
+        <span class="string">'YColor'</span>      , [.3 .3 .3]    , <span class="keyword">...</span>
+        <span class="string">'ZColor'</span>      , [.3 .3 .3]    , <span class="keyword">...</span>
+        <span class="string">'LineWidth'</span>   , 1             );
+    axis([0 1 0 1 0 maxZ]);
+    pause(0.001);
+<span class="keyword">end</span>
+</pre><h2>Print Plots<a name="9"></a></h2><pre>   n1 = [1 ceil(.25/(2*tau)) ceil(.25/tau)...
+      ceil(.25/tau)+5 ceil(.25/tau)+20 ceil(.25/tau)+50];</pre><pre class="codeinput">n1 = [1 floor(fin*6/24) floor(fin*12/24)<span class="keyword">...</span>
+    floor(fin*13/24) floor(fin*14/24) floor(fin*15/24)];
+figure(2)
+<span class="keyword">for</span> i = 1:length(n1)
+    s1=subplot(3,2,i);
+    mesh(x,y,Qresh(:,:,n1(i)))
+    axis([0 1 0 1 0 maxZ]);
+    <span class="comment">% hTitle, hXLabel, hYLabel, hZLabel</span>
+    hTitle = title(sprintf(<span class="string">'t = %0.4f'</span>,time(n1(i))));
+    hXLabel = xlabel(<span class="string">'x'</span>);
+    hYLabel = ylabel(<span class="string">'y'</span>);
+    hZLabel = zlabel(<span class="string">'Q'</span>);
+    <span class="comment">% Configuration</span>
+    set( gca                       , <span class="keyword">...</span>
+        <span class="string">'FontName'</span>   , <span class="string">'Helvetica'</span> );
+    set([hTitle, hXLabel, hYLabel, hZLabel], <span class="keyword">...</span>
+        <span class="string">'FontName'</span>   , <span class="string">'AvantGarde'</span>);
+    set( gca             , <span class="keyword">...</span>
+        <span class="string">'FontSize'</span>   , 8           );
+    set([hXLabel, hYLabel, hZLabel]  , <span class="keyword">...</span>
+        <span class="string">'FontSize'</span>   , 10          );
+    set( hTitle                    , <span class="keyword">...</span>
+        <span class="string">'FontSize'</span>   , 12          , <span class="keyword">...</span>
+        <span class="string">'FontWeight'</span> , <span class="string">'bold'</span>      );
+    set(gca, <span class="keyword">...</span>
+        <span class="string">'Box'</span>         , <span class="string">'off'</span>         , <span class="keyword">...</span>
+        <span class="string">'TickDir'</span>     , <span class="string">'out'</span>         , <span class="keyword">...</span>
+        <span class="string">'TickLength'</span>  , [.02 .02]     , <span class="keyword">...</span>
+        <span class="string">'XMinorTick'</span>  , <span class="string">'on'</span>          , <span class="keyword">...</span>
+        <span class="string">'YMinorTick'</span>  , <span class="string">'on'</span>          , <span class="keyword">...</span>
+        <span class="string">'XColor'</span>      , [.3 .3 .3]    , <span class="keyword">...</span>
+        <span class="string">'YColor'</span>      , [.3 .3 .3]    , <span class="keyword">...</span>
+        <span class="string">'LineWidth'</span>   , 1             );
+<span class="keyword">end</span>
+</pre><h2>Save Figure<a name="10"></a></h2><pre class="codeinput">saveFigurePath = [<span class="string">'/Users/kevin/SkyDrive/KTH Work'</span> <span class="keyword">...</span>
+    <span class="string">'/Period 3 2014/DN2255/Homework/1/Heat Equation/Figures/'</span>];
+addpath(saveFigurePath);
+printYesNo = 0;
+<span class="keyword">if</span> printYesNo == 1
+    set(figure(1), <span class="string">'PaperPositionMode'</span>, <span class="string">'auto'</span>);
+    print(<span class="string">'-depsc2'</span>, [saveFigurePath <span class="keyword">...</span>
+        sprintf(<span class="string">'smoothVariableConservationPlot'</span>)]);
+<span class="keyword">end</span>
+</pre><h2>Save Figure 2<a name="11"></a></h2><pre class="codeinput">saveFigurePath = [<span class="string">'/Users/kevin/SkyDrive/KTH Work'</span> <span class="keyword">...</span>
+    <span class="string">'/Period 3 2014/DN2255/Homework/1/Heat Equation/Figures/'</span>];
+addpath(saveFigurePath);
+printYesNo = 0;
+<span class="keyword">if</span> printYesNo == 1
+    set(figure(2), <span class="string">'PaperPositionMode'</span>, <span class="string">'auto'</span>);
+    print(<span class="string">'-depsc2'</span>, [saveFigurePath <span class="keyword">...</span>
+        sprintf(<span class="string">'smoothVariableFunctionPlot'</span>)]);
+<span class="keyword">end</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Heat_equation
+% Program to solve the diffusion equation
+% using the Backward Euler method
+%% Parameters
+clear all;close all;clc;
+savePath = ['/Users/kevin/SkyDrive/KTH Work/' ...
+    'Period 3 2014/DN2255/Homework/1/Heat Equation/Figures'];
+N = 50; % Number of grid points
+L = 1; % The system extends from (x)=(0) to (x)=(L)
+h = L/N;
+i = 1:(N); % 1:N
+[x,y] = meshgrid(h/2:h:L,h/2:h:L);
+w = 0.2;
+xs = 0.5;
+ys = 0.5;
+tfinal = .5;
+tau = .1*h;
+coeff = tau/h^2;
+tsteps = ceil(tfinal/tau);
+time = linspace(0,tfinal,tsteps);
+%% Initialize Source function
+xExponent = (x-xs).^2;
+yExponent = (y-ys).^2;
+S = exp(-(xExponent)/w^2).*exp(-yExponent/w^2);
+deltaFunction = zeros(N);
+deltaFunction(round(N/2),round(N/2))=2;
+% S = deltaFunction;
+S = reshape(S,[N^2,1]);
+%% Compute matrix A
+% Boundary conditions
+xgrid = h/2:h:L;
+qy1 = 1/(3*pi) * sin(3*pi*xgrid);
+qy0 = 1/pi * sin(pi*xgrid);
+qy = qy1 -qy0;
+TN = - diag(ones(N-1,1),-1) + 2*eye(N) - diag(ones(N-1,1),1);
+TNy = TN;
+% Periodic
+TN(1,end) = -1;
+TN(end,1) = -1;
+% No Flux
+% TN(1,1) = 1;
+% TN(end,end) = 1;
+
+TNxN = kron(TN,eye(N)) + kron(eye(N),TNy);
+mA = eye(N^2) + coeff*TNxN;
+sparseA = sparse(mA);
+%% Initialize loop and plot variables
+Q = zeros(N);
+Q(1,:) = coeff*qy0; % Q(y,x)
+Q(2,:) = coeff*qy1; % Q(y,x)
+Q = reshape(Q,[N^2,1]);
+Qplot(:,1) = Q; % initial value
+neg1BC = ones(N);
+neg1BC(1,1) = 1;
+neg1BC(end,end) = 1;
+neg1BC = coeff*kron(neg1BC,eye(N));
+sneg1BC = sparse(neg1BC);
+stepNumber=round(.25/tau);
+%% Main loops
+for iter=1:stepNumber
+    Q = (sparseA)\Q + tau*S;
+    Q = reshape(Q,[N,N]);
+    Q(1,:) = coeff*qy0; % Q(y,x)
+    Q(2,:) = coeff*qy1; % Q(y,x)
+    Q = reshape(Q,[N^2,1]);
+    Qplot(:,iter+1) = Q(:);
+end
+% Loop after source is gone
+for iter2=(iter+2):tsteps
+    Q = (sparseA)\Q;
+    Q = reshape(Q,[N,N]);
+    Q(1,:) = coeff*qy0; % Q(y,x)
+    Q(2,:) = coeff*qy1; % Q(y,x)
+    Q = reshape(Q,[N^2,1]);
+    Qplot(:,iter2) = Q(:);
+end
+%% Reshape Q for plotting
+Qresh = reshape(Qplot,[N,N,tsteps]);
+%% look at dx*dy*Qij for Conservation
+cons(1:tsteps,1) = h^2*sum(sum(Qresh(:,:,1:end)));
+figure(1);
+plot(tau*(1:length(cons)),cons);
+axis([0 tau*length(cons) min(cons) 1.2*max(cons)])
+% hTitle, hXLabel, hYLabel
+hTitle = title('Conservation of Q_{i,j} over time');
+hXLabel = xlabel('time (sec)');
+hYLabel = ylabel('\Deltax \Deltay Q_{i,j}');
+% Configuration
+set( gca                       , ...
+    'FontName'   , 'Helvetica' );
+set([hTitle, hXLabel, hYLabel], ...
+    'FontName'   , 'AvantGarde');
+set( gca             , ...
+    'FontSize'   , 8           );
+set([hXLabel, hYLabel]  , ...
+    'FontSize'   , 10          );
+set( hTitle                    , ...
+    'FontSize'   , 12          , ...
+    'FontWeight' , 'bold'      );
+set(gca, ...
+    'Box'         , 'off'         , ...
+    'TickDir'     , 'out'         , ...
+    'TickLength'  , [.02 .02]     , ...
+    'XMinorTick'  , 'on'          , ...
+    'YMinorTick'  , 'on'          , ...
+    'XColor'      , [.3 .3 .3]    , ...
+    'YColor'      , [.3 .3 .3]    , ...
+    'ZColor'      , [.3 .3 .3]    , ...
+    'LineWidth'   , 1             );
+%% Plot
+fin = length(Qplot(1,:));
+maxZ = max(max(max(Qresh)));
+figure1=figure(3);
+for i = 1:fin
+    mesh(x,y,Qresh(:,:,i))
+    hTitle = title(sprintf('Source Turned off at t=%0.2f\nt=%0.4f',(iter+1)*tau,tau*i));
+    hXLabel = xlabel('x');
+    hYLabel = ylabel('y');
+    hZLabel = zlabel('z');
+    set( gca                       , ...
+        'FontName'   , 'Helvetica' );
+    set([hTitle, hXLabel, hYLabel, hZLabel], ...
+        'FontName'   , 'AvantGarde');
+    set( gca             , ...
+        'FontSize'   , 8           );
+    set([hXLabel, hYLabel, hZLabel]  , ...
+        'FontSize'   , 10          );
+    set( hTitle                    , ...
+        'FontSize'   , 12          , ...
+        'FontWeight' , 'bold'      );
+    set(gca, ...
+        'Box'         , 'off'         , ...
+        'TickDir'     , 'out'         , ...
+        'TickLength'  , [.02 .02]     , ...
+        'XMinorTick'  , 'on'          , ...
+        'YMinorTick'  , 'on'          , ...
+        'ZMinorTick'  , 'on'          , ...
+        'XColor'      , [.3 .3 .3]    , ...
+        'YColor'      , [.3 .3 .3]    , ...
+        'ZColor'      , [.3 .3 .3]    , ...
+        'LineWidth'   , 1             );
+    axis([0 1 0 1 0 maxZ]);
+    pause(0.001);
+end
+%% Print Plots
+%     n1 = [1 ceil(.25/(2*tau)) ceil(.25/tau)...
+%        ceil(.25/tau)+5 ceil(.25/tau)+20 ceil(.25/tau)+50];
+n1 = [1 floor(fin*6/24) floor(fin*12/24)...
+    floor(fin*13/24) floor(fin*14/24) floor(fin*15/24)];
+figure(2)
+for i = 1:length(n1)
+    s1=subplot(3,2,i);
+    mesh(x,y,Qresh(:,:,n1(i)))
+    axis([0 1 0 1 0 maxZ]);
+    % hTitle, hXLabel, hYLabel, hZLabel
+    hTitle = title(sprintf('t = %0.4f',time(n1(i))));
+    hXLabel = xlabel('x');
+    hYLabel = ylabel('y');
+    hZLabel = zlabel('Q');
+    % Configuration
+    set( gca                       , ...
+        'FontName'   , 'Helvetica' );
+    set([hTitle, hXLabel, hYLabel, hZLabel], ...
+        'FontName'   , 'AvantGarde');
+    set( gca             , ...
+        'FontSize'   , 8           );
+    set([hXLabel, hYLabel, hZLabel]  , ...
+        'FontSize'   , 10          );
+    set( hTitle                    , ...
+        'FontSize'   , 12          , ...
+        'FontWeight' , 'bold'      );
+    set(gca, ...
+        'Box'         , 'off'         , ...
+        'TickDir'     , 'out'         , ...
+        'TickLength'  , [.02 .02]     , ...
+        'XMinorTick'  , 'on'          , ...
+        'YMinorTick'  , 'on'          , ...
+        'XColor'      , [.3 .3 .3]    , ...
+        'YColor'      , [.3 .3 .3]    , ...
+        'LineWidth'   , 1             );
+end
+%% Save Figure
+saveFigurePath = ['/Users/kevin/SkyDrive/KTH Work' ...
+    '/Period 3 2014/DN2255/Homework/1/Heat Equation/Figures/'];
+addpath(saveFigurePath);
+printYesNo = 0;
+if printYesNo == 1
+    set(figure(1), 'PaperPositionMode', 'auto');
+    print('-depsc2', [saveFigurePath ...
+        sprintf('smoothVariableConservationPlot')]);
+end
+%% Save Figure 2
+saveFigurePath = ['/Users/kevin/SkyDrive/KTH Work' ...
+    '/Period 3 2014/DN2255/Homework/1/Heat Equation/Figures/'];
+addpath(saveFigurePath);
+printYesNo = 0;
+if printYesNo == 1
+    set(figure(2), 'PaperPositionMode', 'auto');
+    print('-depsc2', [saveFigurePath ...
+        sprintf('smoothVariableFunctionPlot')]);
+end
+
+##### SOURCE END #####
+--></body></html>
